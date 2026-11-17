@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="SeQuery">
+  <defs>
+    <clipPath id="badge-clip">
+      <circle cx="64" cy="64" r="60" />
+    </clipPath>
+  </defs>
+
+  <circle cx="64" cy="64" r="60" fill="#0A0A0C" />
+
+  <g clip-path="url(#badge-clip)">
+    <circle cx="24" cy="36" r="1.35" fill="#71717A" />
+    <circle cx="104" cy="52" r="1.15" fill="#A1A1AA" />
+    <circle cx="22" cy="94" r="1" fill="#52525B" />
+
+    <!-- orb / query target (red semantic accent) -->
+    <circle cx="68" cy="20" r="13" fill="#EF4444" fill-opacity="0.18" />
+    <circle cx="68" cy="20" r="7.5" fill="#EF4444" fill-opacity="0.34" />
+    <circle cx="68" cy="20" r="4.5" fill="#FFF1F2" />
+    <circle cx="68" cy="20" r="2" fill="#DC2626" />
+
+    <!-- pointing hand reaching toward the orb -->
+    <g transform="rotate(12 60 80)">
+      <path
+        fill="#FAFAFA"
+        d="M 46 102
+           C 42 96, 33 86, 28 74
+           C 25 67, 32 61, 38 66
+           L 48 75
+           L 48 35
+           C 48 28, 60 28, 60 35
+           L 60 56
+           C 60 49, 72 49, 72 56
+           L 72 60
+           C 72 53, 83 53, 83 60
+           L 83 65
+           C 83 59, 93 59, 93 66
+           L 93 80
+           C 93 93, 86 101, 80 106
+           L 80 134
+           L 46 134
+           L 46 102
+           Z"
+      />
+      <path
+        fill="none"
+        stroke="#0A0A0C"
+        stroke-width="2"
+        stroke-linecap="round"
+        opacity="0.45"
+        d="M 60 56 L 60 72 M 72 60 L 72 74 M 83 65 L 83 77"
+      />
+    </g>
+  </g>
+
+  <circle cx="64" cy="64" r="60" fill="none" stroke="#27272A" stroke-width="1.5" />
+</svg>

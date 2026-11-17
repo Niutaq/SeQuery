@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SeQuery</title>
+  <link rel="icon" href="/assets/logo.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/app.css" />
+</head>
+<body>
+  <div class="shell">
+    <header class="top">
+      <div class="brand">
+        <img src="/assets/logo.svg" alt="SeQuery" width="32" height="32" />
+        <span class="brand__name">SeQuery</span>
+      </div>
+      <div class="top__actions">
+        <button type="button" class="drawer-btn" id="open-crm-drawer" data-i18n="btn_crm_drawer">Baza CRM i role</button>
+        <button type="button" class="drawer-btn" id="open-trace-drawer" data-i18n="btn_trace_drawer">Inspektor warstw</button>
+        <div class="lang" role="group" aria-label="Language">
+          <button type="button" class="lang__btn" data-lang="pl" aria-pressed="true">PL</button>
+          <button type="button" class="lang__btn" data-lang="en" aria-pressed="false">EN</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <!-- Left rail: input console -->
+      <section class="compose" aria-label="Input">
+        <div class="compose__stack">
+          <label class="field">
+            <span class="label-row">
+              <span class="label" data-i18n="user">Kto pyta</span>
+              <span class="role-quick" id="role-quick-hint"></span>
+            </span>
+            <select id="user"></select>
+          </label>
+
+          <label class="field">
+            <span class="label" data-i18n="model_label">Model AI (Ollama)</span>
+            <select id="model"></select>
+          </label>
+
+          <div class="field">
+            <span class="label" data-i18n="mode">Tryb</span>
+            <div class="segment" role="radiogroup" aria-label="Mode">
+              <label class="segment__item"><input type="radio" name="mode" value="vulnerable" /><span data-i18n="vulnerable">Podatny</span></label>
+              <label class="segment__item"><input type="radio" name="mode" value="secure" checked /><span data-i18n="secure">Bezpieczny</span></label>
+              <label class="segment__item"><input type="radio" name="mode" value="compare" /><span data-i18n="compare">Porównaj</span></label>
+            </div>
+          </div>
+
+          <label class="field">
+            <span class="label" data-i18n="query">Pytanie</span>
+            <textarea id="query" rows="4" data-i18n-placeholder="query_ph" placeholder="Pokaż moje deale..."></textarea>
+          </label>
+
+          <div class="field">
+            <span class="label" data-i18n="presets_label">Scenariusze testowe</span>
+            <div class="chips" id="presets-chips"></div>
+          </div>
+        </div>
+
+        <div class="compose__foot">
+          <input type="checkbox" id="redteam" hidden />
+          <button type="button" class="btn" id="run" data-i18n="run">Uruchom</button>
+          <p class="status" id="status" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <!-- Right stage: pipeline & output -->
+      <section class="stage" aria-label="Pipeline and Output">
+        <div class="idle-state" id="idle-state">
+          <div class="sec-head">
+            <span class="sec-sub" data-i18n="idle_sub">Oczekuje na zapytanie</span>
+          </div>
+          <div id="idle-pipeline"></div>
+          <p class="idle-hint" data-i18n="idle_hint">Wybierz scenariusz po lewej i kliknij Uruchom, aby prześledzić wykonanie krok po kroku.</p>
+        </div>
+
+        <div class="results" id="out" hidden>
+          <div id="live-card" class="pane" hidden>
+            <div class="pane__head">
+              <h2 class="sec-title" data-i18n="live_trace">Przepływ na żywo</h2>
+              <div class="trace__head-right">
+                <span class="trace-timer" id="trace-timer">0.0 s</span>
+                <span class="trace__badge" id="trace-state"></span>
+              </div>
+            </div>
+            <div id="live-pipeline"></div>
+            <div class="trace__list" id="trace-list"></div>
+            <div class="model-box" id="live-stream" hidden>
+              <div class="model-box__head">
+                <span class="model-box__title" data-i18n="live_stream_label">Odpowiedź modelu na żywo (Ollama)</span>
+              </div>
+              <pre class="code-block live-stream__code" id="live-stream-code"></pre>
+            </div>
+          </div>
+          <div id="panels"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Right-side slide-over inspector drawer -->
+  <div class="backdrop" id="drawer-backdrop" hidden></div>
+  <aside class="side-drawer" id="side-drawer" aria-hidden="true">
+    <div class="side-drawer__head">
+      <div class="side-drawer__tabs">
+        <button type="button" class="side-tab is-active" data-tab="crm" data-i18n="tab_crm">Baza CRM i role</button>
+        <button type="button" class="side-tab" data-tab="inspector" data-i18n="tab_inspector">Inspektor warstw</button>
+      </div>
+      <button type="button" class="side-drawer__close" id="close-drawer" aria-label="Close">✕</button>
+    </div>
+
+    <div class="side-drawer__body">
+      <div class="side-pane" id="pane-crm">
+        <h3 class="side-pane__title" data-i18n="sec_tenants">Dwie firmy w jednej bazie (Multi-Tenant)</h3>
+        <div class="tenants-grid" id="tenants-grid"></div>
+
+        <h3 class="side-pane__title" data-i18n="sec_roles">Uprawnienia ról (RLS vs CLS)</h3>
+        <div id="roles-grid"></div>
+      </div>
+
+      <div class="side-pane" id="pane-inspector" hidden>
+        <div id="inspector-content"></div>
+      </div>
+    </div>
+  </aside>
+
+  <script id="initial-context" type="application/json">{{ context | tojson }}</script>
+  <script src="/static/js/app.js" type="module"></script>
+</body>
+</html>

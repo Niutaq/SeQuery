@@ -1,0 +1,7 @@
+psycopg2-binary
+openai
+sqlglot
+python-dotenv
+fastapi
+uvicorn[standard]
+jinja2
