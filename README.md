@@ -4,66 +4,64 @@
 
 # SeQuery
 
-Lokalny demonstrator **Prompt Injection** w systemie Multi-Tenant Text-to-SQL (CRM) oraz obrony wielowarstwowej (**Sentinel -> AST `sqlglot` -> PostgreSQL RLS/CLS**).
-
-Szczegóły architektury i lista zadań dla agentów: [AGENTS.md](AGENTS.md).
+Local **Prompt Injection** demonstrator for Multi-Tenant Text-to-SQL (CRM) and defense-in-depth (**Sentinel -> AST `sqlglot` -> PostgreSQL RLS/CLS**).
 
 ![SeQuery UI](assets/preview.jpg)
 
 ## Stack
 
-- PostgreSQL 16 (Docker, polityki RLS oraz uprawnienia kolumnowe CLS)
-- Ollama (`qwen2.5-coder:7b`)
+- PostgreSQL 16 (Docker, Row-Level Security and Column-Level Security)
+- Ollama (local LLM inference, e.g. `qwen2.5-coder:7b`)
 - Python 3.10+, FastAPI, `sqlglot`, `psycopg2`
 - [Task](https://taskfile.dev)
 
-## Architektura
+## Architecture
 
-| Element | Opis |
+| Component | Role |
 |---|---|
-| **SQL Generator** | Zamienia pytanie w języku naturalnym na zapytanie `SELECT` (Ollama) |
-| **Sentinel** | Wykrywa próby Prompt Injection oraz Jailbreaku (heurystyka + LLM) |
-| **AST Guard** | Waliduje drzewo zapytania w `sqlglot` (whitelist tabel i kolumn, tylko `SELECT`) |
-| **PostgreSQL RLS/CLS** | Izoluje dane między firmami (`app.current_company_id`) i blokuje dostęp do tajnych kolumn (`SET ROLE`) |
+| **SQL Generator** | Converts a natural-language question into a `SELECT` query (Ollama) |
+| **Sentinel** | Detects Prompt Injection and Jailbreak attempts (lexical heuristics + LLM) |
+| **AST Guard** | Validates and rewrites the SQL syntax tree with `sqlglot` (table/column allow-list, `SELECT` only) |
+| **PostgreSQL RLS/CLS** | Isolates rows per tenant (`app.current_company_id`) and denies restricted columns (`SET ROLE`) |
 
-Tryby pracy:
-- `vulnerable`: brak bramek, wyłączone RLS (`SET row_security = off`), pozwala zobaczyć pełny skutek udanego ataku.
-- `secure`: aktywne bramki Sentinel + AST oraz twarde egzekwowanie RLS/CLS w bazie.
-- `compare`: wykonuje oba tryby obok siebie dla tego samego zapytania.
+Execution modes:
+- `vulnerable`: gates disabled and `SET row_security = off`, showing the full impact of a successful Prompt Injection.
+- `secure`: Sentinel + AST validation enabled and RLS/CLS enforced by PostgreSQL.
+- `compare`: runs both modes side by side on the same prompt.
 
-## Uruchomienie
-
-```bash
-task setup   # tworzy venv, instaluje zależności i pobiera model Ollama
-task up      # uruchamia PostgreSQL w Dockerze
-task ui      # startuje aplikację na http://127.0.0.1:8000
-```
-
-Komendy pomocnicze CLI:
+## Quick Start
 
 ```bash
-task demo        # porównanie scenariuszy PI-01, PI-02 i BENIGN w terminalu
-task test-rls    # test polityk RLS/CLS bezpośrednio w PostgreSQL (bez udziału LLM)
-task reset-db    # reset kontenera i wolumenu bazy danych
-task doctor      # sprawdzenie środowiska (Docker, Ollama, Python)
+task setup   # creates venv, installs dependencies, pulls Ollama model
+task up      # starts PostgreSQL in Docker
+task ui      # launches web UI at http://127.0.0.1:8000
 ```
 
-## Dane testowe w bazie
+CLI helpers:
 
-- **Firma Alpha** (`company_id=1`): `anna_admin_alpha` (`admin`), `jan_sales_alpha` (`sales_rep`), `ewa_viewer_alpha` (`viewer`)
-- **Firma Beta** (`company_id=2`): `marek_admin_beta` (`admin`), `piotr_sales_beta` (`sales_rep`)
-- Kolumna `deals.secret_margin_notes` jest dostępna wyłącznie dla roli `admin` (CLS).
+```bash
+task demo        # compares attack and benign scenarios in the terminal
+task test-rls    # verifies RLS/CLS directly in PostgreSQL without LLM
+task reset-db    # resets database container and volume
+task doctor      # checks Docker, Ollama, and Python dependencies
+```
 
-## Struktura projektu
+## Seed Data
+
+- **Alpha Tech Sp. z o.o.** (`company_id=1`): `anna_admin_alpha` (`admin`), `jan_sales_alpha` (`sales_rep`), `ewa_viewer_alpha` (`viewer`)
+- **Beta Logistics S.A.** (`company_id=2`): `marek_admin_beta` (`admin`), `piotr_sales_beta` (`sales_rep`)
+- Column `deals.secret_margin_notes` is granted exclusively to the `admin` role (CLS).
+
+## Project Structure
 
 ```text
-assets/logo.svg      logo projektu
-assets/preview.jpg   zrzut ekranu interfejsu
-app.py               serwer FastAPI
-templates/           szablon HTML
-static/              style CSS i logika UI (JS)
-agent_swarm.py       logika agentów, walidacja AST i obsługa bazy
-init.sql             schemat bazy, dane początkowe, polityki RLS/CLS
-docker-compose.yml   konfiguracja PostgreSQL 16
-Taskfile.yml         automatyzacja zadań
+assets/logo.svg      project logo
+assets/preview.jpg   web UI screenshot
+app.py               FastAPI server and SSE endpoints
+templates/           HTML template
+static/              CSS styles and UI logic (JS)
+agent_swarm.py       multi-agent pipeline, AST guard, and DB execution
+init.sql             schema, seed data, and RLS/CLS policies
+docker-compose.yml   PostgreSQL 16 setup
+Taskfile.yml         task runner configuration
 ```

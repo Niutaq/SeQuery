@@ -18,3 +18,4 @@ Thumbs.db
 # Local artifacts
 *.log
 .demo_output/
+AGENTS.md
