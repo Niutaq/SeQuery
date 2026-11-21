@@ -2,11 +2,15 @@
   <img src="assets/logo.svg" alt="SeQuery" width="96" />
 </p>
 
-# SeQuery
+<div align="center">
+
+## SeQuery
+
+</div>
 
 Local **Prompt Injection** demonstrator for Multi-Tenant Text-to-SQL (CRM) and defense-in-depth (**Sentinel -> AST `sqlglot` -> PostgreSQL RLS/CLS**).
 
-![SeQuery UI](assets/preview.jpg)
+<img width="1886" height="1011" alt="image" src="https://github.com/user-attachments/assets/74aab07b-5b4c-40b9-a268-a6a7b9cb53e4" />
 
 ## Stack
 
